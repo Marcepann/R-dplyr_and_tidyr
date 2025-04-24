@@ -1,0 +1,122 @@
+---
+title: "BT4BR Assignment 7"
+author:
+  name: Kaja Łucka
+date: "2025-04-30" 
+format: 
+  html:
+      df-print: paged                 # data frames as paginated tables
+      tidy: false                     # disable automatic code tidying 
+      embed-resources: true           # embed images in the HTML file
+      theme: navbars                    # pretty theme :D
+      toc: true                       # enable table of contents
+      toc-location: right
+      toc-depth: 6
+      toc-expand: 6
+      code-tools:
+        source: true                  # show the source code
+        toggle: true                  # allow the user to hide/show the code blocks
+      code-fold: false                # by default code blocks are expanded
+      code-summary: "Show the code"   # label the code folding toggle
+      code-overflow: wrap             # wrap long lines of code
+      page-layout: full               # use the full width of the page
+editor: visual
+editor_options: 
+  markdown: 
+    wrap: 72
+execute:
+  cache: true                         # code isn’t rerun unless it changes
+---
+
+*To complete this assignment I used materials shared with students
+during "Basic Toolkit for Bioinformatics Research". I also intensely
+browsed the internet and gathered information from the following
+websites:*
+
+[*dplyr.tidyverse.org/reference/summarise.html*](https://dplyr.tidyverse.org/reference/summarise.html)
+
+[*dplyr.tidyverse.org/reference/filter.html*](https://dplyr.tidyverse.org/reference/filter.html)
+
+[*quarto.org/docs/output-formats/html-themes.html*](https://quarto.org/docs/output-formats/html-themes.html)
+
+## Task 1
+
+Load the “iris” dataset and transform it to longer.
+
+***TIP:** you should get 3 columns Species \| Trait \| Size*
+
+```{r}
+library(tidyr)
+library(dplyr)
+library(readr)
+
+# loads iris dataset
+data("iris")
+iris
+
+# transforms iris dataset into the longer format - takes columns which names contain "Sepal" or "Petal", puts the names into a new "Trait" column and the values into a new "Size" column
+iris_long <- iris %>%
+  pivot_longer(cols=matches("Sepal|Petal"), names_to="Trait", values_to="Size")
+iris_long
+```
+
+## Task 2
+
+Answer the following questions
+
+***TIP:** you can answer each question “piping” only 2-3 commands*
+
+### Task 2.1
+
+What is the mean length and width of the sepal and petal of each
+species?
+
+```{r}
+# groups iris_long by "Species" and "Trait" values, counts their mean and puts the result into the "Mean.Size" column
+iris_long_means <- iris_long %>% 
+  group_by(Species, Trait) %>% 
+  summarise(Mean.Size = mean(Size), .groups = "keep")  # .groups = "keep" means that results stay grouped by both Species and Trait
+iris_long_means
+```
+
+### Task 2.2
+
+What is the largest and widest, petal and sepal, of virginica and
+versicolor species?
+
+```{r}
+# takes data only for virginica and versicolor species from iris_long table, groups them by "Species" and "Trait" values, counts their maximum value and puts it into the "Maximum" column
+iris_long_maximum <- iris_long %>% 
+  filter(Species %in% c("virginica", "versicolor")) %>% 
+  group_by(Species, Trait) %>% 
+  summarise(Maximum = max(Size), .groups = "keep")  # .groups = "keep" means that results stay grouped by both Species and Trait
+iris_long_maximum
+```
+
+### Task 2.3
+
+For each species, for sepal and petal width and length, how many
+observations are above the mean?
+
+***TIP:** adding the means as column might help*
+
+*Might seem difficult (it is not that difficult if you know the tricks
+;) ). If you don’t manage to make it work, submit your best attempts and
+we will discuss it in class.*
+
+```{r}
+# left joins iris_long with iris_long_means (every record from iris_long now has a corresponding mean value), leaves only records that are above mean (the value in the "Size" column is higher than the value in the "Mean.Size" column), then counts every row and saves the result in the "n" column
+iris_long_above_mean <- iris_long %>% 
+  left_join(y=iris_long_means, by = join_by(Species, Trait)) %>% 
+  filter(Size > Mean.Size) %>% 
+  group_by(Species, Trait) %>% 
+  count()
+iris_long_above_mean
+```
+
+## Task 3
+
+Deliver a link to GitHub containing the a Quarto file and the compiled
+HTML. It should contain explanations of what each chunk does. If you
+have private repository, remember to send me invitation so I can access
+it .
